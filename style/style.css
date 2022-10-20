@@ -23,7 +23,7 @@ html, body {
 }
 
 body {
-   background-image: url(../images/background/background.png);
+   /*background-image: url(../images/background/background.png);*/
    background-attachment: fixed;  
    background-position: top;
    background-repeat: no-repeat;
@@ -53,11 +53,11 @@ body {
 }
 
 #first {
-   height: 112px;
+   height: 65px;
 }
 
 #second {
-   height: 112px;
+   height: 65px;
 }
 
 .logo {
@@ -69,8 +69,8 @@ body {
 }
 
 .logo img {
-   width: 100px;
-   height: 100px;
+   width: 60px;
+   height: 60px;
 }
 
 .login img {

@@ -2,31 +2,40 @@
 
 class DataBase {
 
-   private $link;
+   private $host, $database, $charset, $user, $password;
 
-   public function __construct() {
+    /**
+     * @var PDO
+     */
+    private $link;
 
-      $this->connect();
+
+    public function __construct() {
+       $config = require_once 'config.php';
+
+       $this->host = $config['hosts'];
+       $this->database = $config['database'];
+       $this->charset = $config['charset'];
+       $this->user = $config['user'];
+       $this->password = $config['passwords'];
+
+       $this->connect();
    }
 
    private function connect () {
-      try{
-         $config = require_once 'config.php';
-
-         $dbh = 'mysql:host='.$config['hosts'].';dbname='.$config['database'].';charset='.$config['charset'];
-
-         $this->link = new PDO($dbh, $config['user'], $config['passwords']);
+      try {
+//          print_r($this);
+         $dbh = 'mysql:host='.$this->host.';dbname='.$this->database.';charset='.$this->charset;
+         $this->link = new PDO($dbh, $this->user, $this->password);
       } catch (Exception $e) {
          echo '<center><div width:100%"><p class="massage" style="width: auto;">Помилка підключення до бази даних!</p></div></center>';
       }
    }
 
-   public function execute ($sql) {
-
+   public function execute ($sql): bool
+   {
       $sth = $this->link->prepare($sql);
-
       return $sth->execute();
-
    }
 
    public function query ($sql, $params = null) {
@@ -39,6 +48,7 @@ class DataBase {
       $params = [];
       }
 
+      if (!$this->link) { $this->connect();}
       $exe = $this->link->prepare($sql);
 
       $exe->execute($params); 
@@ -50,7 +60,6 @@ class DataBase {
       }
 
       return $result;
-
    }
 }
 ?>

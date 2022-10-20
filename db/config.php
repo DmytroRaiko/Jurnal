@@ -1,8 +1,8 @@
 <?php 
 return [
    'hosts' => 'localhost',
-   'user' => 'RaiDInc',
-   'passwords' => 'plGQWHXDCLh2wujt',
+   'user' => 'root',
+   'passwords' => '50608173',
    'charset' => 'utf8',
    'database' => 'kurs'
 ];

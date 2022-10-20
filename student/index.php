@@ -166,7 +166,7 @@ function mySqlQuer($db, $querty, $params)
                                  $('#block-table-visit').html(data);
                               }
                            });
-                        });
+                        }); 
                      })
                   </script>
                </div>

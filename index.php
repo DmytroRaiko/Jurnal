@@ -25,9 +25,9 @@ $db = new DataBase();
 </head>
 <body>
    <div class="all">
-      <div id="page-preloader" class="preloader">
-         <div class="loader"></div>
-      </div>
+<!--      <div id="page-preloader" class="preloader">-->
+<!--         <div class="loader"></div>-->
+<!--      </div>-->
       <!-- header - start -->
       <header id="first">
          <div class="logo"><a href="https://mk.sumdu.edu.ua/" target="_blank"><img src="./images/logo.png" alt="logo" title="На головну МК СумДУ"></a></div>
@@ -87,6 +87,8 @@ $db = new DataBase();
 
                         if(!empty($loginNormalized) && !empty($passwordNormalized)) {
                            $passwordHash = md5(md5($passwordNormalized).$SMT);
+
+                           echo $passwordHash;
                            try {      
                               $sql = $db->query("SELECT `id`, nickname, site_checked, privileges FROM user WHERE nickname = :login AND password_start = :password",
                                  [
@@ -261,6 +263,6 @@ $db = new DataBase();
       </footer>
    </div>
    <!-- footer - end -->
-   <script src="./script/preloader.js"></script>
+<!--   <script src="./script/preloader.js"></script>-->
 </body>
 </html>

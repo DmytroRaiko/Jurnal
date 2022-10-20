@@ -1,25 +1,160 @@
 <?php 
 require_once '../db/db.php';
 include '../db/setting.php';
-$db = new DataBase();
 session_start();
 
 if ($_SESSION['name'] != "admin-site" || !isset($_SESSION['name'])){
 
    header('Location: ../index.php');
    exit;
-} 
-
-function mySqlQuer ($db, $querty, $params) {
-   try {      
-
-      $sql = $db->query($querty, $params);
-      return $sql;
-   } catch (Exception $e) {
-
-      echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-   }                           
 }
+class AdminQueries extends DataBase {
+    public function __construct(){
+        parent::__construct();
+    }
+
+    public function SelectUsers () {
+        try {
+            return parent::query("SELECT DISTINCT `nickname`,`surname`, `name`, `middle_name` FROM `user`");
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectTeachers () {
+
+        try {
+            return parent::query("SELECT `id`,`surname`, `name`, `middle_name` FROM `teacher` ORDER BY `surname`, `name`");
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectStudents () {
+        try {
+            return parent::query("SELECT `id`,`surname`, `name`, `middle_name` FROM `student` ORDER BY `surname`,`name`");
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectStudentByID ($id) {
+        try {
+            return $this::query("SELECT `student`.`id` AS 'student_id',`student`.`name` AS 'student_name', `student`.`surname` AS 'student_surname',
+                                       `student`.`middle_name` AS 'student_middle_name', `student`.`study_form` AS 'student_study_form', `group`.`id` AS 'group_id'
+                                        FROM `student` INNER JOIN `group` ON `student`.`group` = `group`.`id` WhERE `student`.`id` = :id",
+                [
+                    ':id' => $id
+                ]);
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectFullSubjectInfo () {
+        try {
+            return $this::query("SELECT `teacher`.`surname` AS 'teacher_surname', `teacher`.`name` AS 'teacher_name', `teacher`.`middle_name` AS 'teacher_middle_name', 
+                                                `descipline`.`id` AS 'descipline_id', `subject`.`name` AS 'subject_name', `subject`.`mark_system` AS 'subject_mark_system'
+                                                FROM `teacher` INNER JOIN (`descipline` INNER JOIN `subject` ON `descipline`.`subject`=`subject`.`id`) 
+                                                ON `teacher`.`id`=`descipline`.`teacher`;");
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectSpecialitiesInIDRange () {
+        try {
+            return $this::query("SELECT `name`, `id`, `spec_number` FROM `specialty` WHERE `id` IN(SELECT min(`id`) FROM `specialty` GROUP BY `name`)");
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectSpecialities () {
+        try {
+            return $this::query("SELECT `name`, `id`, `spec_number` FROM `specialty` ORDER BY `name`");
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectSpecialityByID ($id) {
+        try {
+            return $this::query("SELECT  `id`, `name`,`spec_number`, `department_head` FROM `specialty` WHERE `id` = :id",
+                [
+                    ':id' => $id
+                ]);
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectGroups () {
+        try {
+            return $this::query("SELECT `name`, `id` FROM `group` ORDER BY `name`");
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectGroupByID ($id) {
+        try {
+            return $this::query("SELECT `id`, `specialty`, `name`, `kurator` FROM `group` WHERE `id` = :id",
+                [
+                    ':id' => $id
+                ]
+            );
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectSubjects () {
+        try {
+            return $this::query("SELECT `id`, `name`, `mark_system` FROM `subject`");
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectSubjectByID ($id) {
+        try {
+            return $this::query("SELECT `subject`.`id` AS 'subject_id', `subject`.`name` AS 'subject_name',
+                                          `subject`.`mark_system` AS 'subject_mark_system', `background_subject`.`id` AS 'id_background',
+                                          `background_subject`.`image` AS 'image_background' 
+                                          FROM `subject` INNER JOIN `background_subject` ON `subject`.`id` = `background_subject`.`subject`
+                                          WHERE `subject`.`id` = :id ORDER BY `subject`.`name`",
+                [
+                    ':id' => $id
+              ]
+            );
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+        }
+    }
+
+    public function SelectInfoForEditTableSpeciality(): array
+    {
+        try {
+            return [
+                $this::query("SELECT `specialty`.`id` AS 'specialty_id', `specialty`.`name` AS 'specialty_name',
+                      `specialty`.`spec_number` AS 'specialty_spec_number'
+                      FROM `specialty` 
+                      WHERE `specialty`.`department_head` IS NULL
+                      ORDER BY `specialty`.`name`"),
+                $this::query("SELECT `specialty`.`id` AS 'specialty_id', `specialty`.`name` AS 'specialty_name',
+                      `specialty`.`spec_number` AS 'specialty_spec_number',  `teacher`.`surname` AS 'teacher_surname', `teacher`.`name` AS 'teacher_name', `teacher`.`middle_name` AS 'teacher_middle_name'
+                      FROM `specialty` INNER JOIN `teacher` ON `specialty`.`department_head` = `teacher`.`id`
+                      ORDER BY `specialty`.`name`")
+            ];
+        } catch (Exception $e) {
+            echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+            return [];
+        }
+    }
+}
+
+$adminQuery = new AdminQueries();
 ?>
 <!DOCTYPE html>
 <html lang="ua">
@@ -42,9 +177,9 @@ function mySqlQuer ($db, $querty, $params) {
 </head>
 <body>
    <div class="all">
-      <div id="page-preloader" class="preloader">
-         <div class="loader"></div>
-      </div>
+<!--      <div id="page-preloader" class="preloader">-->
+<!--         <div class="loader"></div>-->
+<!--      </div>-->
       <!-- header - start -->
       <header id="first">
          <div class="logo"><a href="https://mk.sumdu.edu.ua/" target="_blank"><img src="../images/logo.png" alt="logo" title="На головну МК СумДУ"></a></div>
@@ -208,9 +343,6 @@ function mySqlQuer ($db, $querty, $params) {
                </div>
             </div>
       </div>
-
-
-
       <main>
          <div class="content">
             <div id="menu-sidebar">
@@ -225,7 +357,7 @@ function mySqlQuer ($db, $querty, $params) {
             </div>
             <div id="active-zone">
                <div id="user-zone" class="block-active-zone">
-                  <center style="width:100%"><h2 style="width:100%"><p class="block-text" style="width:100%">Адміни</p></h2></center><hr>
+                  <div style="width:100%; text-align: center;"><h2 style="width:100%"><p class="block-text" style="width:100%">Адміни</p></h2></div><hr>
                   <!--              -->
                   <div class="c">
                         <h3><p class="block-text">Додати адміна</p></h3><hr>
@@ -301,15 +433,10 @@ function mySqlQuer ($db, $querty, $params) {
                                        pattern="[A-ZА-Я ІЇЄҐ]{1}[’]?[a-zа-я іїєґ]+[’]?[a-zа-я іїєґ]+\s?[A-ZА-Яa-zа-я ІЇЄҐіїєґ.]+" title="Іванов І.І. або Лук’янов І.І." placeholder="Іванов Іван Іванович" required>
                               <datalist id="nicknames-list">
                               <?php
-
-                                 try {      
-                                    $sql = $db->query("SELECT DISTINCT `nickname`,`surname`, `name`, `middle_name` FROM `user`");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
-                                 $r = 0;
+                                $sql = $adminQuery->SelectUsers();
+                                $r = 0;
                                  while ($r < count($sql)) {
-                                    echo "<option value = '".$sql[$r]['nickname']."'>".$sql[$r]['surname']." ".$sql[$r]['name']." ".$sql[$r]['middle_name']."</option>";                                    
+                                    echo "<option value = '".$sql[$r]['nickname']."'>".$sql[$r]['surname']." ".$sql[$r]['name']." ".$sql[$r]['middle_name']."</option>";
                                     $r++;
                                  }
 
@@ -355,11 +482,15 @@ function mySqlQuer ($db, $querty, $params) {
                                  pattern="[A-ZА-Я ІЇЄҐ]{1}[’]?[a-zа-я іїєґ]+[’]?[a-zа-я іїєґ]+\s{1}[A-ZА-Яa-zа-я ІЇЄҐіїєґ.]+" title="Іванов І.І. або Лук’янов І.І." placeholder="Іванов І І" required>
                               <datalist id="nickname-list-pass">
                               <?php
-                                 try {      
-                                    $sql = $db->query("SELECT DISTINCT `nickname`, `surname`, `name`, `middle_name` FROM `user`");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
+                                $sql = $adminQuery->SelectUsers();
+
+                                 $r = 0;
+                                 while ($r < count($sql)) {
+                                    echo "<option value = '".$sql[$r]['nickname']."'>".$sql[$r]['surname']." ".$sql[$r]['name']." ".$sql[$r]['middle_name']."</option>";                                    
+                                    $r++;
                                  }
+
+                                    $sql = $adminQuery->SelectTeachers();
                                  $r = 0;
                                  while ($r < count($sql)) {
                                     echo "<option value = '".$sql[$r]['nickname']."'>".$sql[$r]['surname']." ".$sql[$r]['name']." ".$sql[$r]['middle_name']."</option>";                                    
@@ -367,18 +498,7 @@ function mySqlQuer ($db, $querty, $params) {
                                  }
 
                                  try {      
-                                    $sql = $db->query("SELECT DISTINCT `nickname`, `surname`, `name`, `middle_name`  FROM `teacher`");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
-                                 $r = 0;
-                                 while ($r < count($sql)) {
-                                    echo "<option value = '".$sql[$r]['nickname']."'>".$sql[$r]['surname']." ".$sql[$r]['name']." ".$sql[$r]['middle_name']."</option>";                                    
-                                    $r++;
-                                 }
-
-                                 try {      
-                                    $sql = $db->query("SELECT DISTINCT `nickname`, `surname`, `name`, `middle_name`  FROM `student`");
+                                    $sql = $adminQuery->SelectStudents();
                                  } catch (Exception $e) {
                                     echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
                                  }
@@ -437,11 +557,7 @@ function mySqlQuer ($db, $querty, $params) {
                                        pattern="[0-9]+" title="Надсилати тільки цифри, але вводити можна назву" required>
                               <datalist id="specialty-list">
                                  <?php
-                                 try {      
-                                    $sql = $db->query("SELECT `name`, `id`, `spec_number` FROM `specialty` WHERE `id` IN(SELECT min(`id`) FROM `specialty` GROUP BY `name`)");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
+                                $sql = $adminQuery->SelectSpecialitiesInIDRange();
                                  
                                  $r = 0;
                                  while ($r < count($sql)) {
@@ -455,12 +571,8 @@ function mySqlQuer ($db, $querty, $params) {
                                        pattern="[0-9]+" title="Надсилати тільки цифри, але вводити можна назву" required>
                               <datalist id="kurator-list">
                                  <?php
-                                 
-                                 try {      
-                                    $sql = $db->query("SELECT `id`, `surname`, `name`, `middle_name` FROM `teacher`");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
+
+                                 $sql = $adminQuery->SelectTeachers();
                                  
                                  $r = 0;
                                  while ($r < count($sql)) {
@@ -511,11 +623,7 @@ function mySqlQuer ($db, $querty, $params) {
                               <datalist id="group-list">
                                  <?php
 
-                                 try {      
-                                    $sql = $db->query("SELECT `name`, `id` FROM `group` ORDER BY `name`");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
+                                 $sql = $adminQuery->SelectGroups();
                                  
                                  $r = 0;
                                  while ($r < count($sql)) {
@@ -556,15 +664,7 @@ function mySqlQuer ($db, $querty, $params) {
                         <div class="change-list">
                               <?php
                                  if (isset($_GET['red_group_id'])) {
-                                    try {      
-                                       $sqll = $db->query("SELECT `id`, `specialty`, `name`, `kurator` FROM `group` WHERE `id` = :id",
-                                          [
-                                             ':id' => $_GET['red_group_id']
-                                          ]
-                                       );
-                                    } catch (Exception $e) {
-                                       echo "Помилка! Зверніться до Адміністратора сайту!";    
-                                    }
+                                   $sqll = $adminQuery->SelectGroupByID($_GET['red_group_id']);
                                  }
                               ?>
                            <form action="./index.php" method="post" class="form-change" id="change-group-active">
@@ -579,11 +679,8 @@ function mySqlQuer ($db, $querty, $params) {
                                           value="<?php if(isset($_GET['red_group_id'])) echo $sqll[0]['specialty']; else echo '';?>" required>
                                  <datalist id="specialty-list-ch">
                                     <?php
-                                    try {      
-                                       $sql = $db->query("SELECT `name`, `id`, `spec_number` FROM `specialty` ORDER BY `name`");
-                                    } catch (Exception $e) {
-                                       echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                    }
+
+                                    $sql = $adminQuery->SelectSpecialities();
                                     
                                     $r = 0;
                                     while ($r < count($sql)) {
@@ -598,13 +695,9 @@ function mySqlQuer ($db, $querty, $params) {
                                           value="<?php if(isset($_GET['red_group_id'])) echo $sqll[0]['kurator']; else echo '';?>" required>
                                  <datalist id="kurator-list-ch">
                                     <?php
-                                    
-                                    try {      
-                                       $sql = $db->query("SELECT `id`, `surname`, `name`, `middle_name` FROM `teacher`");
-                                    } catch (Exception $e) {
-                                       echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                    }
-                                    
+
+                                    $sql = $adminQuery->SelectTeachers();
+
                                     $r = 0;
                                     while ($r < count($sql)) {
                                        echo "<option value='".$sql[$r]['id']."'>".$sql[$r]['surname']." ".$sql[$r]['name']." ".$sql[$r]['middle_name']."</option>";
@@ -721,11 +814,7 @@ function mySqlQuer ($db, $querty, $params) {
                               <input type="search" name="group" id="group-student-add" class="active-input" list="group-list-stud-add" oninput="this.value = nameDelSymbol(this.value);" required>
                               <datalist id="group-list-stud-add">
                                  <?php
-                                 try {      
-                                    $sql = $db->query("SELECT `name`, `id` FROM `group` ORDER BY `name`");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
+                                 $sql = $adminQuery->SelectGroups();
 
                                  $r = 0;
                                  while ($r < count($sql)) {
@@ -784,11 +873,7 @@ function mySqlQuer ($db, $querty, $params) {
                               <datalist id="student-list-del">
                                  <?php
 
-                                 try {      
-                                    $sql = $db->query("SELECT `id`,`surname`, `name`, `middle_name` FROM `student` ORDER BY `surname`,`name`");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
+                                 $sql = $adminQuery->SelectStudents();
 
                                  $r = 0;
                                  while ($r < count($sql)) {
@@ -833,13 +918,7 @@ function mySqlQuer ($db, $querty, $params) {
                               <?php
                                  if (isset($_GET['red_student_id'])) {
                                     try {      
-                                       $sql = $db->query("SELECT `student`.`id` AS 'student_id',`student`.`name` AS 'student_name', `student`.`surname` AS 'student_surname',
-                                       `student`.`middle_name` AS 'student_middle_name', `student`.`study_form` AS 'student_study_form', `group`.`id` AS 'group_id'
-                                        FROM `student` INNER JOIN `group` ON `student`.`group` = `group`.`id` WhERE `student`.`id` = :id",
-                                          [
-                                             ':id' => $_GET['red_student_id']
-                                          ]
-                                       );
+                                       $sql = $adminQuery->SelectStudentByID($_GET['red_student_id']);
                                     } catch (Exception $e) {
                                        echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
                                     }
@@ -874,11 +953,7 @@ function mySqlQuer ($db, $querty, $params) {
                                  value="<?php if (isset($_GET['red_student_id'])) echo $sql[0]['group_id']; else echo '';?>" required>
                                  <datalist id="group-list-stud-add">
                                     <?php
-                                    try {      
-                                       $sql = $db->query("SELECT `name`, `id` FROM `group` ORDER BY `name`");
-                                    } catch (Exception $e) {
-                                       echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                    }
+                                    $sql = $adminQuery->SelectGroups();
 
                                     $r = 0;
                                     while ($r < count($sql)) {
@@ -927,11 +1002,7 @@ function mySqlQuer ($db, $querty, $params) {
                                        <input type="search" name="viewgroups" id="viewgroups" list="view-group">
                                           <datalist id="view-group">
                                              <?php
-                                                try {      
-                                                   $sql = $db->query("SELECT `name`, `id` FROM `group`");
-                                                } catch (Exception $e) {
-                                                   echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                                }
+                                                $sql = $adminQuery->SelectGroups();
             
                                                 $r = 0;
                                                 while ($r < count($sql)) {
@@ -1027,12 +1098,7 @@ function mySqlQuer ($db, $querty, $params) {
                                        pattern="[0-9]+" title="Надсилати тільки цифри, але вводити можна назву" required>
                               <datalist id="name-list">
                                  <?php
-
-                                    try {      
-                                       $sql = $db->query("SELECT `id`, `name`, `mark_system` FROM `subject`");
-                                    } catch (Exception $e) {
-                                       echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                    }
+                                   $sql = $adminQuery->SelectSubjects();
 
                                     $r = 0;
                                     while ($r < count($sql)) {
@@ -1074,19 +1140,7 @@ function mySqlQuer ($db, $querty, $params) {
                         <div class="change-list">
                               <?php
                                  if (isset($_GET['red_subject_id'])) {
-                                    try {      
-                                       $sqll = $db->query("SELECT `subject`.`id` AS 'subject_id', `subject`.`name` AS 'subject_name',
-                                          `subject`.`mark_system` AS 'subject_mark_system', `background_subject`.`id` AS 'id_background',
-                                          `background_subject`.`image` AS 'image_background' 
-                                          FROM `subject` INNER JOIN `background_subject` ON `subject`.`id` = `background_subject`.`subject`
-                                          WHERE `subject`.`id` = :id ORDER BY `subject`.`name`",
-                                          [
-                                             ':id' => $_GET['red_subject_id']
-                                          ]
-                                       );
-                                    } catch (Exception $e) {
-                                       echo "Помилка! Зверніться до Адміністратора сайту!";    
-                                    }
+                                       $sqll = $adminQuery->SelectSubjectByID($_GET['red_subject_id']);
                                  }
                               ?>
                            <form action="./index.php" method="post" class="form-change" id="change-subject-active">
@@ -1254,11 +1308,7 @@ function mySqlQuer ($db, $querty, $params) {
                               <datalist id="-list-del">
                                  <?php
 
-                                 try {      
-                                    $sql = $db->query("SELECT `id`,`surname`, `name`, `middle_name` FROM `teacher` ORDER BY `surname`, `name`");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
+                                 $sql = $adminQuery->SelectTeachers();
 
                                  $r = 0;
                                  while ($r < count($sql)) {
@@ -1305,11 +1355,7 @@ function mySqlQuer ($db, $querty, $params) {
                                        pattern="[0-9]+" title="Надсилати тільки цифри, але вводити можна назву" required>
                                  <datalist id="discipline-teacher-list-end">
                                     <?php
-                                    try {      
-                                       $sql = $db->query("SELECT `id`, `surname`, `name`, `middle_name` FROM `teacher`");
-                                    } catch (Exception $e) {
-                                       echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                    }
+                                   $sql = $adminQuery->SelectTeachers();
 
                                     $r = 0;
                                     while ($r < count($sql)) {
@@ -1325,7 +1371,7 @@ function mySqlQuer ($db, $querty, $params) {
                                  <datalist id="discipline-subject-list-end">
                                     <?php
                                     try {      
-                                       $sql = $db->query("SELECT `id`, `name`, `mark_system` FROM `subject`");
+                                       $sql = $adminQuery->SelectSubjects();
                                     } catch (Exception $e) {
                                        echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
                                     }
@@ -1378,14 +1424,7 @@ function mySqlQuer ($db, $querty, $params) {
                               <datalist id="discipline-list-del">
                                  <?php
 
-                                 try {      
-                                    $sql = $db->query("SELECT `teacher`.`surname` AS 'teacher_surname', `teacher`.`name` AS 'teacher_name', `teacher`.`middle_name` AS 'teacher_middle_name', 
-                                                `descipline`.`id` AS 'descipline_id', `subject`.`name` AS 'subject_name', `subject`.`mark_system` AS 'subject_mark_system'
-                                                FROM `teacher` INNER JOIN (`descipline` INNER JOIN `subject` ON `descipline`.`subject`=`subject`.`id`) 
-                                                ON `teacher`.`id`=`descipline`.`teacher`;");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
+                                $sql = $adminQuery->SelectFullSubjectInfo();
 
                                  $r = 0;
                                  while ($r < count($sql)) {
@@ -1443,11 +1482,8 @@ function mySqlQuer ($db, $querty, $params) {
                               <datalist id="department-head-list-end">
                                  <?php
 
-                                 try {      
-                                    $sql = $db->query("SELECT  `id`,`surname`,`name`,`middle_name` FROM `teacher`");
-                                 } catch (Exception $e) {
-                                    echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                 }
+                                $sql = $adminQuery->SelectTeachers();
+
                                  $r = 0;
                                  while ($r < count($sql)) {
                                     echo "<option value='".$sql[$r]['id']."'>".$sql[$r]['surname']." ".$sql[$r]['name']." ".$sql[$r]['middle_name']."</option>";
@@ -1465,13 +1501,13 @@ function mySqlQuer ($db, $querty, $params) {
                         <script>
                         $(document).ready(function () {
                            $('#add-specialty-active').submit( (event) => {
-                              event.preventDefault(); 
+                              event.preventDefault();
 
-                              var name = $('#name-specialty-add').val();
-                              var number = $('#number-specialty-add').val();
-                              var department_head = $('#department-head-specialty-add').val();
-                              
-                              $.post("../php/add-specialty.php",{name, number,department_head}) 
+                               const name = $('#name-specialty-add').val();
+                               const number = $('#number-specialty-add').val();
+                               const department_head = $('#department-head-specialty-add').val();
+
+                               $.post("../php/add-specialty.php",{name, number,department_head})
 
                               .done(function(data){
                                  
@@ -1500,12 +1536,7 @@ function mySqlQuer ($db, $querty, $params) {
                                        pattern="[0-9]+" title="Надсилати тільки цифри, але вводити можна назву" required>
                               <datalist id="department-head-list-end-s">
                                  <?php
-
-                                    try {      
-                                       $sql = $db->query("SELECT `id`, `name`, `spec_number` FROM `specialty`");
-                                    } catch (Exception $e) {
-                                       echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                    }
+                                    $sql = $adminQuery->SelectSpecialities();
 
                                     $r = 0;
                                     while ($r < count($sql)) {
@@ -1549,16 +1580,8 @@ function mySqlQuer ($db, $querty, $params) {
                      <div class="zone">
                         <div class="change-list">
                               <?php
-                                 if (isset($_GET['red_spec_id'])) {
-                                    try {      
-                                       $sql = $db->query("SELECT  `id`, `name`,`spec_number`, `department_head` FROM `specialty` WHERE `id` = :id",
-                                          [
-                                             ':id' => $_GET['red_spec_id']
-                                          ]
-                                       );
-                                    } catch (Exception $e) {
-                                       echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                    }
+                                if (isset($_GET['red_spec_id'])) {
+                                   $sql = $adminQuery->SelectSpecialityByID($_GET['red_spec_id']);
                                  }
                               ?>
                            <form action="./index.php" method="post" class="form-change" id="change-specialty-active">
@@ -1577,11 +1600,8 @@ function mySqlQuer ($db, $querty, $params) {
                                  <datalist id="department-head-list-chang">
                                     <?php
 
-                                    try {      
-                                       $sql = $db->query("SELECT  `id`,`surname`,`name`,`middle_name` FROM `teacher`");
-                                    } catch (Exception $e) {
-                                       echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                    }
+                                   $sql = $adminQuery->SelectTeachers();
+
                                     $r = 0;
                                     while ($r < count($sql)) {
                                        echo "<option value='".$sql[$r]['id']."'>".$sql[$r]['surname']." ".$sql[$r]['name']." ".$sql[$r]['middle_name']."</option>";
@@ -1634,26 +1654,9 @@ function mySqlQuer ($db, $querty, $params) {
                                     </tr>
                                  </thead>
                                  <tbody>
-                                    <?php 
-                                       try {      
-                                          $sql = $db->query("SELECT `specialty`.`id` AS 'specialty_id', `specialty`.`name` AS 'specialty_name',
-                                          `specialty`.`spec_number` AS 'specialty_spec_number'
-                                          FROM `specialty` 
-                                          WHERE `specialty`.`department_head` IS NULL
-                                          ORDER BY `specialty`.`name`");
-                                       } catch (Exception $e) {
-                                          echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                       }
+                                    <?php
+                                        [$sql, $sqll] = $adminQuery->SelectInfoForEditTableSpeciality();
 
-                                       try {      
-                                          $sqll = $db->query("SELECT `specialty`.`id` AS 'specialty_id', `specialty`.`name` AS 'specialty_name',
-                                          `specialty`.`spec_number` AS 'specialty_spec_number',  `teacher`.`surname` AS 'teacher_surname', `teacher`.`name` AS 'teacher_name', `teacher`.`middle_name` AS 'teacher_middle_name'
-                                          FROM `specialty` INNER JOIN `teacher` ON `specialty`.`department_head` = `teacher`.`id`
-                                          ORDER BY `specialty`.`name`");
-                                       } catch (Exception $e) {
-                                          echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-                                       }
-                                       
                                        $r = 0;
                                        while ($r < count($sql)) {
                                           if ($r%2 == 0 || $r === 0) {
@@ -2028,7 +2031,6 @@ function mySqlQuer ($db, $querty, $params) {
                $('#group-list').load('index.php #group-list');
                $('#specialty-list-ch').load('index.php #specialty-list-ch');
                $('#kurator-list-ch').load('index.php #kurator-list-ch');
-               $('#group-list-stud-add').load('index.php #group-list-stud-add');
                $('#change-group-list').load('index.php #change-group-list');
                $('#group-list-stud-add').load('index.php #group-list-stud-add');
                $('#view-group').load('index.php #view-group');
@@ -2058,8 +2060,9 @@ function mySqlQuer ($db, $querty, $params) {
    <script src="../script/script-admin-site.js"></script>
    <script>
       $(document).ready(function() {
-         $('body').on('click', '.jurnal', event, function() {
+         $('body').click('click', '.jurnal', event, function() {
             event.preventDefault();
+            console.log('here');
             
             $('#block-table-admin').hide();
             $('#back-to-subject').hide();

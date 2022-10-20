@@ -3,16 +3,6 @@ include '../db/setting.php';
 require_once '../db/db.php';
 $db = new DataBase();
 
-function mySqlQuer ($db, $querty, $params) {
-   try {      
-
-      $sql = $db->query($querty, $params);
-      return $sql;
-   } catch (Exception $e) {
-
-      echo "Помилка виконання! Зверніться до Адміністратора сайту!";    
-   }                           
-}
 
    $nameNormalized = trim($_POST['name']);
    $specialtyNormalized = trim($_POST['specialty']);

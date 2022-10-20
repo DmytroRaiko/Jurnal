@@ -114,10 +114,10 @@ main .content {
    min-width: 17%;
    max-width: 20%;
    margin-right: 5%;
-   border-radius: 30px;
+   border-radius: 2px;
    padding: 1%;
-   background-color: rgba(255, 255, 0, 0.582);
-   box-shadow: 0 0 5px 2px rgba(223, 238, 92, 0.714);
+   background-color: #f5f5f5;
+   box-shadow: 0 0 5px 2px #d5d5d5;
 }
 
 #active-zone {
@@ -125,10 +125,10 @@ main .content {
    height: auto;
    min-width: 60%;
    max-width: 85%;
-   border-radius: 30px;
-   background-color: rgba(255, 255, 0, 0.582);
+   border-radius: 2px;
+   background-color: #f5f5f5;
    padding: 2%;
-   box-shadow: 0 0 5px 2px rgba(223, 238, 92, 0.714);
+   box-shadow: 0 0 5px 2px #d5d5d5;
 }
 
 .menu-item-sidebar, .a{
@@ -136,18 +136,14 @@ main .content {
    list-style-type: none;
    padding: 5%;
    height: auto;
-   border: 1.5px solid rgb(0, 0, 255);
+   border: 1px solid rgb(0, 0, 255);
    margin: 4%;
    font-size: 18px;
-   background-color: rgb(49, 173, 211);
-   border-bottom-left-radius: 25px;
-   border-top-right-radius: 25px;
-   border-bottom-right-radius: 25px;
-   border-top-left-radius: 25px;
+   border-radius: 3px;
    font-family: 'Roboto Condensed', sans-serif;
    font-weight: 500;
    color: rgb(0, 0, 0);
-   background: linear-gradient(to right, rgb(49, 163, 201), rgb(99, 213, 251), rgb(149, 255, 255));
+   background: rgb(49, 173, 211) linear-gradient(to right, rgb(49, 163, 201), rgb(99, 213, 251), rgb(149, 255, 255));
    display: flex;
    justify-content: space-between;
    align-items: center;
