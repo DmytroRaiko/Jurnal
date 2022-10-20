@@ -1,0 +1,97 @@
+@media only screen and (max-width: 992px) {
+   
+   #menu-sidebar {
+      display: none;
+   }
+   
+   #first {
+      display: none;
+   }
+   
+   #second {
+      display: flex;
+      width: 100%;
+   }
+
+   #active-zone {
+      width: 90%;
+   }
+
+   main {
+      height: calc(100% - 112px);
+   }
+   
+}
+
+@media only screen and (max-width: 768px) {
+   #menu-sidebar {
+      display: none;
+   }
+   
+   #first {
+      display: none;
+   }
+   
+   #second {
+      display: flex;
+      width: 100%;
+   }
+
+   #active-zone {
+      width: 90%;
+   }
+   
+   select, option, datalist {
+      max-width: 100%;
+   }
+   
+   main {
+      height: calc(100% - 98px);
+   }
+}
+
+@media only screen and (max-width: 508px) {
+   #menu-sidebar {
+      display: none;
+   }
+   
+   #first {
+      display: none;
+   }
+   
+   #second {
+      display: flex;
+      width: 100%;
+   }
+
+   #active-zone {
+      width: 90%;
+   }
+   
+   select, option, datalist {
+      max-width: 130px;
+   }
+
+   .table {
+      display: grid;
+      min-width: 90%;
+      grid-template-columns: 
+         minmax(90px, 1fr)
+         minmax(60px, 70px)
+         minmax(90px, 1fr)
+         minmax(70px, 100px);
+   }
+
+   .table th, .table td {
+      font-size: 0.9rem;
+   }
+
+   .block-text {
+      font-size: 20px;
+   }
+   
+   main {
+      height: calc(100% - 88px);
+   }
+   
+}

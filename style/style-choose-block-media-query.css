@@ -1,0 +1,84 @@
+@media only screen and (max-width: 992px) {
+   
+   #active-zone {
+      max-width: 85%;
+   }
+   
+   #uper-zone,  #uper-zone-kurator {
+      flex-direction: column;
+   }
+
+   #back-zone, #back-zone-kurator {
+      width: 100%;
+   }
+
+   .order {
+      height: calc(100% + 102px);
+   }
+}
+
+@media only screen and (max-width: 768px) {
+
+   #back-zone {
+      width: 100%;
+   }
+
+   .back {
+      font-size: 19px;
+      padding: 7px;
+   }
+
+   .order {
+      height: calc(100% + 102px);
+   }
+}
+
+@media only screen and (max-width: 508px) {
+
+   #block-control-zone {
+      flex-direction: column;
+   }
+
+   .block-embargo-true, .block-embargo-false {
+      width: 94%;
+   }
+
+   #block-group, #block-subject, #block-subject-kurator {
+      flex-direction: column; 
+   }
+
+   .block-add, .choose-group, .choose-subject, .choose-subject-kurator, .choose-subject-student, .choose-group-visit, .choose-subject-admin {
+      height: 200px;
+      width: 99%;
+   }
+
+   .order {
+      height: calc(100% + 102px);
+   }
+
+   .modal-window-block {
+      width: 350px;
+   }
+
+   .form-modal input[type='text'],.form-modal input[type='week'], .form-modal input[type='month'], .form-modal input[type='search'], .form-modal input[type='date'], .form-modal select, .form-modal option, .form-modal datalist{
+      font-size: 16px;
+   }
+
+   .form-modal label {
+      font-size: 26px;
+   }  
+
+   #uper-zone {
+      flex-direction: column;
+   }
+
+   #back-zone {
+      width: 100%;
+   }
+
+   .back {
+      font-size: 17px;
+      padding: 5px;
+   }
+
+}

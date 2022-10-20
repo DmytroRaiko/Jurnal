@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<?php
+require_once '../db/db.php';
+include '../db/setting.php';
+$db = new DataBase();
+session_start();
+
+if ($_SESSION['name'] != "kurator" || !isset($_SESSION['name'])) {
+
+   header('Location: ../index.php');
+   exit;
+}
+
+function mySqlQuer($db, $querty, $params)
+{
+   try {
+
+      $sql = $db->query($querty, $params);
+      return $sql;
+   } catch (Exception $e) {
+
+      echo "Помилка виконання! Зверніться до Адміністратора сайту!";
+   }
+}
+
+echo "<script>
+      localStorage.setItem(\"id\"," . $_SESSION['id'] . ");
+      </script>";
+?>
+
+<html>
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <link rel="stylesheet" href="../style/style.css">
+   <link rel="stylesheet" href="../style/template.css">
+   <link rel="stylesheet" href="../style/style-media-query.css">
+   <link rel="stylesheet" href="../style/templete-media-query.css">
+   <link rel="stylesheet" href="../style/style-choose-block.css">
+   <link rel="stylesheet" href="../style/style-teacher.css">
+   <link rel="stylesheet" href="../style/kurator.css">
+   <link rel="stylesheet" href="../style/style-choose-block-media-query.css">
+   <link rel="stylesheet" href="../style/zvit.css">
+   <link rel="shortcut icon" href="../images/favicon.png" type="image/x-icon">
+   <script src='//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+   <title>Електронний журнал</title>
+</head>
+
+<body>
+   <div class="all">
+      <div id="page-preloader" class="preloader">
+         <div class="loader"></div>
+      </div>
+      <!-- header - start -->
+      <header id="first">
+         <div class="logo"><a href="https://mk.sumdu.edu.ua/" target="_blank"><img src="../images/logo.png" alt="logo" title="На головну МК СумДУ"></a></div>
+         <div class="name">ЕЛЕКТРОННИЙ ЖУРНАЛ</div>
+         <div class="login"><a href="../index.php"><img src="../images/customer_100px.png" alt="customer" title="Вихід"></a></div>
+      </header>
+
+      <header id="second">
+         <div class="logo"><a href="https://mk.sumdu.edu.ua/" target="_blank"><img src="../images/logo.png" alt="logo" title="На головну МК СумДУ"></a></div>
+         <input type="checkbox" id="check-menu">
+         <div class="name">ЕЛЕКТРОННИЙ ЖУРНАЛ</div>
+         <label for="check-menu" class="burger">
+            <div class="burger-line first"></div>
+            <div class="burger-line second"></div>
+            <div class="burger-line third"></div>
+            <div class="burger-line fourth"></div>
+         </label>
+         <div id="top-menu">
+            <li class="jurnal menu-item">Журнал</li>
+            <li class="visit menu-item">Відвідування</li>
+            <li class="my-group menu-item"> Журнал "Моя група"</li>
+            <li class="filter-zone menu-item f" style="display: none; background-color: rgb(49, 173, 240)">Фільтри</li>
+            <li class="add-buttom menu-item f" style="display: none; background-color: rgb(49, 173, 240)"> Додати пару</li>
+            <li class="filter-zone-visit menu-item f" style="display: none; background-color: rgb(49, 173, 240)">Фільтри</li>
+            <li class="add-buttom-visit menu-item f" style="display: none; background-color: rgb(49, 173, 240)">Додати день</li>
+            <li class="filter-zone-my-group menu-item f" style="display: none; background-color: rgb(49, 173, 240)">Фільтри</li>
+            <li class="menu-item avtorise" id="avtorise"><a style="border: none; " href="../index.php">Вихід <img src="../images/exit_32px.png" style="vertical-align: middle;" alt="Exit"></a></li>
+         </div>
+      </header>
+      <div id="add-group-teacher" class="add-group-teacher order" style="display: none;">
+         <div class="modal-window-block">
+            <div class="modal-window">
+               <div class="header-text">Додати групу</div>
+               <div class="x">×</div>
+            </div>
+            <div class="content">
+               <form id="form-add-group" class="form-modal">
+                  <label for="subject-name">Предмет</label>
+                  <input type="hidden" id="descipline-id">
+                  <input type="text" id="subject-name" readonly>
+                  <label for="group-add-teacher">Група</label>
+                  <select id="group-add-teacher" required>
+                  </select>
+                  <input type="submit" value="Додати">
+               </form>
+               <div id="message-add-group-teacher" style="width: 90%"></div>
+               <script>
+                  $(document).ready(function() {
+                     $('#form-add-group').submit((event) => {
+                        event.preventDefault();
+
+                        var teacher = localStorage.getItem("id");
+                        var descipline = $('#descipline-id').val();
+                        var group = $('#group-add-teacher').val();
+
+                        $.post("../php/form-add-group-teacher.php", {
+                              teacher,
+                              descipline,
+                              group
+                           })
+
+                           .done(function(data) {
+                              $('#message-add-group-teacher').html(data);
+                           });
+                     });
+                  })
+               </script>
+            </div>
+         </div>
+      </div>
+
+      <div id="filter-table-teacher" class="add-group-teacher order order-filter-table-teacher" style="display: none;">
+         <div class="modal-window-block">
+            <div class="modal-window">
+               <div class="header-text">Фільтри</div>
+               <div class="x-filter-table-teacher x">×</div>
+            </div>
+            <div class="content" style="
+                                 justify-content: unset;">
+               <form id="form-table-filter" class="form-modal" style="justify-content: unset;
+                                 text-align: unset;
+                                 display: block;">
+
+               </form>
+               <div id="filter-message"></div>
+               <script>
+                  $(document).ready(function() {
+                     $('body').on("change", "#form-table-filter", function(e) {
+
+                        var data = $('#form-table-filter').serialize();
+                        var pair = localStorage.getItem('pair');
+                        data += "&pair=" + pair;
+
+                        $.ajax({
+                           type: "POST",
+                           url: "../php/mark-table-teacher.php",
+                           data: data,
+                           success: function(data) {
+                              $('#block-table-mark').html(data);
+                           },
+                           error: function() {
+                              alert('error handing here');
+                           }
+                        });
+                     });
+                  })
+               </script>
+            </div>
+         </div>
+      </div>
+
+      <div id="add-pair-teacher" class="add-group-teacher order order-add-pair-teacher" style="display: none;">
+         <div class="modal-window-block">
+            <div class="modal-window">
+               <div class="header-text">Додати пару</div>
+               <div class="x-add-pair-teacher x">×</div>
+            </div>
+            <div class="content">
+               <form id="form-add-pair-teacher" class="form-modal" method="POST">
+                  <input type="hidden" id="pair-add-pair-id">
+                  <label for="pair-date">Дата</label>
+                  <input type="date" name="pair-date" id="pair-date" required>
+                  <label for="pair-type">Тип пари</label>
+                  <input type="search" name="pair-type" id="pair-type" list="list-pair-type" required>
+                  <datalist id="list-pair-type">
+                     <option value="л/р">Лабораторна робота</option>
+                     <option value="зл/р">Захист лабораторної роботи</option>
+                     <option value="п/р">Практична робота</option>
+                     <option value="ауд/р">Оцінка за роботу в аудиторії (якщо оцінка відсутня, то вона не буде враховуватися в розрахунку модульної, семестрової, річної або атестації)</option>
+                     <option value="с/р">Самостійна робота</option>
+                     <option value='к/р'>Контрольна робота</option>
+                     <option value='сем/р'>Семестрова контрольна робота</option>
+                     <option value='т/к'>Тематичний контроль</option>
+                     <option value='мон'>Монолог</option>
+                     <option value='діал'>Діалог</option>
+                     <option value='ауд'>Аудіювання</option>
+                     <option value='чит'>Читання</option>
+                     <option value='п'>Письмо</option>
+                     <option value='говор'>Говоріння</option>
+                     <option value='ККР'>Комплексна к/р</option>
+                     <option value='ДПА'>ДПА</option>
+                     <option value='тест'>Тест</option>
+                     <option value='дикт'>Диктант</option>
+                     <option value='вірш'>Вірш</option>
+                     <option value='твір'>Твір</option>
+                     <option value='поез'>Поезія</option>
+                     <option value='сем'>Семінар (якщо оцінка відсутня, то вона не буде враховуватися в розрахунку модульної, семестрової, річної або атестації)</option>
+                     <option value="доп">Доповідь (якщо оцінка відсутня, то вона не буде враховуватися в розрахунку модульної, семестрової, річної або атестації)</option>
+                     <option value='перез'>Перезалік</option>
+                     <option value='вх/к'>Вхідний контроль</option>
+                     <option value='Е'>Екзамен</option>
+                     <option value='С'>Семестр</option>
+                     <option value='А'>Атестація</option>
+                     <option value='М'>Модуль</option>
+                     <option value='Р'>Річна</option>
+                  </datalist>
+                  <label id="checkbox-dropdown-container-label" style="display: none; font-size: 15px;">Оцінка буде вираховуватися середнє арифметичним тих пар, які ви оберете нижче</label>
+                  <div id="checkbox-dropdown-container" style="display: none;"></div>
+                  <div style="display: none">
+                     <script>
+                        $(document).ready(function() {
+                           $('body').on("click", "#custom-select", function() {
+                              $("#custom-select-option-box").toggle();
+                           });
+
+                           function toggleFillColor(obj) {
+                              $("#custom-select-option-box").show();
+                              if ($(obj).prop('checked') == true) {
+                                 $(obj).parent().css("background", '#c6e7ed');
+                              } else {
+                                 $(obj).parent().css("background", '#FFF');
+                              }
+                           }
+
+                           $('body').on("click", ".custom-select-option", function(e) {
+                              var checkboxObj = $(this).children("input");
+                              if ($(e.target).attr("class") != "custom-select-option-checkbox") {
+                                 if ($(checkboxObj).prop('checked') == true) {
+                                    $(checkboxObj).prop('checked', false)
+                                 } else {
+                                    $(checkboxObj).prop("checked", true);
+                                 }
+                              }
+                              toggleFillColor(checkboxObj);
+                           });
+
+                           $("body").on("click", function(e) {
+                              if (e.target.id != "custom-select" &&
+                                 $(e.target).attr("class") != "custom-select-option") {
+                                 $("#custom-select-option-box").hide();
+                              }
+                           });
+
+                           $('body').on('change', '#pair-date', event, function() {
+                              event.preventDefault();
+
+                              var type = $('#pair-type').val();
+                              var date = $('#pair-date').val();
+
+                              $('#checkbox-dropdown-container').hide();
+                              $('.modal-window-block').css('height', '400px');
+                              $('#checkbox-dropdown-container-label').hide();
+
+                              if (type === "С" || type === "А" || type === "М" || type === "Р") {
+
+                                 var pair = localStorage.getItem("pair");
+
+                                 $.post("../php/avg-mark-block.php", {
+                                       pair,
+                                       type,
+                                       date
+                                    })
+
+                                    .done(function(data) {
+                                       $('#checkbox-dropdown-container').html(data);
+
+                                    });
+                              }
+                           })
+
+                           $('body').on('change', '#pair-type', event, function() {
+                              event.preventDefault();
+
+                              var type = $('#pair-type').val();
+                              var date = $('#pair-date').val();
+
+                              $('#checkbox-dropdown-container').hide();
+                              $('.modal-window-block').css('height', '400px');
+                              $('#checkbox-dropdown-container-label').hide();
+
+                              if (type === "С" || type === "А" || type === "М" || type === "Р") {
+
+                                 var pair = localStorage.getItem("pair");
+
+                                 $.post("../php/avg-mark-block.php", {
+                                       pair,
+                                       type,
+                                       date
+                                    })
+
+                                    .done(function(data) {
+                                       $('#checkbox-dropdown-container').html(data);
+
+
+                                    });
+                              }
+                           })
+                        })
+                     </script>
+                  </div>
+                  <input type="submit" value="Додати">
+               </form>
+               <div id="message-add-pair"></div>
+               <script>
+                  $(document).ready(function() {
+                     $('body').on('submit', '#form-add-pair-teacher', event, function() {
+                        event.preventDefault();
+
+                        var pair = $('#pair-add-pair-id').val();
+                        var date = $('#pair-date').val();
+                        var type = $('#pair-type').val();
+                        var avgC = [];
+
+                        $('input:checked[name=\'toys[]\']').each(function() {
+                           avgC.push($(this).val());
+                        });
+
+                        var avg = avgC.join(':');
+
+                        if ((type === "А" || type === "С" || type === "М" || type === "Р") &&
+                           (avg !== " " && avg !== "" && avg !== undefined && avg !== "NULL")) {
+
+                           $.post("../php/add-pair-teacher.php", {
+                                 pair,
+                                 date,
+                                 type,
+                                 avg
+                              })
+
+                              .done(function(data) {
+                                 $('#message-add-pair').html(data);
+                                 $.post("../php/filter.php", {
+                                       pair
+                                    })
+                                    .done(function(data) {
+                                       $('#form-table-filter').html(data);
+
+
+                                       var s = new Date(),
+                                          year = s.getFullYear(),
+                                          month = s.getMonth() + 1;
+
+                                       if (month < 10) {
+                                          month = "0" + month;
+                                       }
+
+                                       let today = year + "-" + month;
+
+                                       $('#filter-month').val(today);
+
+                                       $('#pair-add-pair-id').val(pair);
+
+                                       var data = $('#form-table-filter').serialize();
+                                       data += "&pair=" + pair;
+
+                                       $.ajax({
+                                          type: "POST",
+                                          url: "../php/mark-table-teacher.php",
+                                          data: data,
+
+                                          success: function(data) {
+                                             $('#block-table-mark').html(data);
+                                          }
+                                       });
+                                    });
+                              });
+                        } else if (type !== "А" && type !== "С" && type !== "М" && type !== "Р") {
+
+                           $.post("../php/add-pair-teacher.php", {
+                                 pair,
+                                 date,
+                                 type,
+                                 avg
+                              })
+
+                              .done(function(data) {
+                                 $('#message-add-pair').html(data);
+                                 $.post("../php/filter.php", {
+                                       pair
+                                    })
+                                    .done(function(data) {
+                                       $('#form-table-filter').html(data);
+
+
+                                       var s = new Date(),
+                                          year = s.getFullYear(),
+                                          month = s.getMonth() + 1;
+
+                                       if (month < 10) {
+                                          month = "0" + month;
+                                       }
+
+                                       let today = year + "-" + month;
+
+                                       $('#filter-month').val(today);
+
+                                       $('#pair-add-pair-id').val(pair);
+
+                                       var data = $('#form-table-filter').serialize();
+                                       data += "&pair=" + pair;
+
+                                       $.ajax({
+                                          type: "POST",
+                                          url: "../php/mark-table-teacher.php",
+                                          data: data,
+
+                                          success: function(data) {
+                                             $('#block-table-mark').html(data);
+                                          }
+                                       });
+                                    });
+                              });
+                        }
+
+                     });
+                  })
+               </script>
+            </div>
+         </div>
+      </div>
+
+      <div id="filter-table-visit" class="add-group-teacher order order-filter-table-visit" style="display: none;">
+         <div class="modal-window-block" style="height: 200px;">
+            <div class="modal-window">
+               <div class="header-text">Фільтри</div>
+               <div class="x-filter-table-visit x">×</div>
+            </div>
+            <div class="content" style="
+                                 justify-content: unset;">
+               <form id="form-table-filter-visit" class="form-modal">
+                  від
+                  <input type="date" name="visit-filter-start" id="visit-filter-start">
+                  до
+                  <input type="date" name="visit-filter-finish" id="visit-filter-finish">
+               </form>
+               <div id="filter-message-visit"></div>
+               <script>
+                  $(document).ready(function() {
+                     $('body').on("change", "#form-table-filter-visit", function(e) {
+                        e.preventDefault();
+
+                        var dayStart, dayFinish, year, month, day;
+
+                        var data = localStorage.getItem('id');
+                        data = "id=" + data;
+
+                        dayStart = $('#visit-filter-start').val();
+                        dayFinish = $('#visit-filter-finish').val();
+
+                        var data = localStorage.getItem('id');
+                        data = "id=" + data;
+
+                        data += "&dayStart=" + dayStart + "&dayFinish=" + dayFinish;
+
+                        $.ajax({
+                           type: "POST",
+                           url: "../php/visit-table-kurator.php",
+                           data: data,
+                           success: function(data) {
+                              $('#block-table-visit').html(data);
+                           }
+                        });
+                     });
+                  })
+               </script>
+            </div>
+         </div>
+      </div>
+
+      <div id="add-day-kurator" class="add-group-teacher order order-add-day-kurator" style="display: none;">
+         <div class="modal-window-block">
+            <div class="modal-window">
+               <div class="header-text">Додати день</div>
+               <div class="x-add-day-visit x">×</div>
+            </div>
+            <div class="content">
+               <form id="form-add-day-visit" class="form-modal" method="POST">
+                  <input type="hidden" id="day-add-pair-id">
+                  <label for="date-visit">Дата</label>
+                  <input type="date" name="date-visit" id="date-visit" required>
+                  <label for="pair-count">Кількість пар</label>
+                  <select name="pair-count" id="pair-count" required>
+                     <option></option>
+                     <option value="1">1</option>
+                     <option value="2">2</option>
+                     <option value="3">3</option>
+                     <option value="4">4</option>
+                     <option value="5">5</option>
+                     <option value="6">6</option>
+                     <option value="7">7</option>
+                     <option value="8">8</option>
+                  </select>
+                  <div id="count-pair" style="display: flex; flex-direction: column;"></div>
+                  <div style="display: none">
+                     <script>
+                        $(document).ready(function() {
+                           $('body').on("submit", "#form-add-day-visit", function(e) {
+                              e.preventDefault();
+
+                              data = $(this).serialize();
+                              data += "&kurator=" + localStorage.getItem("id");
+                              dataAdd = $('#date-visit').val();
+                              $.ajax({
+                                 type: "POST",
+                                 url: "../php/add-day-visit.php",
+                                 data: data,
+                                 success: function(data) {
+                                    $('#add-day-teacher-message').html(data);
+
+                                    var dayStart, dayFinish, year, month, day;
+
+                                    var data = localStorage.getItem('id');
+                                    data = "id=" + data;
+                                    dayStart = $('#visit-filter-start').val();
+                                    dayFinish = $('#visit-filter-finish').val();
+
+                                    var data = localStorage.getItem('id');
+                                    data = "id=" + data;
+
+                                    data += "&dayStart=" + dayStart + "&dayFinish=" + dayFinish;
+
+                                    $.ajax({
+                                       type: "POST",
+                                       url: "../php/visit-table-kurator.php",
+                                       data: data,
+                                       success: function(data) {
+                                          $('#block-table-visit').html(data);
+                                       }
+                                    });
+                                 }
+                              });
+                           })
+
+                           $('body').on("click", ".delete-day-visit", function(e) {
+                              e.preventDefault();
+
+                              var confir = confirm("Cправді бажаєте видалити день?");
+
+                              if (confir === true) {
+
+                                 data = this.id;
+                                 data = data.split(" ");
+                                 data = "date=" + data[0] + "&kurator=" + data[1];
+
+                                 $.ajax({
+                                    type: "POST",
+                                    url: "../php/delete-day-visit.php",
+                                    data: data,
+                                    success: function(data) {
+                                       $('#add-day-teacher-message').html(data);
+                                       var dayStart, dayFinish, year, month, day;
+
+                                       dayStart = $('#visit-filter-start').val();
+                                       dayFinish = $('#visit-filter-finish').val();
+
+                                       var data = localStorage.getItem('id');
+                                       data = "id=" + data;
+
+                                       data += "&dayStart=" + dayStart + "&dayFinish=" + dayFinish;
+
+                                       $.ajax({
+                                          type: "POST",
+                                          url: "../php/visit-table-kurator.php",
+                                          data: data,
+                                          success: function(data) {
+                                             $('#block-table-visit').html(data);
+                                          }
+                                       });
+                                    }
+                                 });
+                              }
+                           })
+                        })
+                     </script>
+                  </div>
+                  <div id="add-day-teacher-message"></div>
+                  <input type="submit" value="Додати">
+               </form>
+               <div id="message-add-day"></div>
+               <script>
+                  $('#pair-count').on('change', function(event) {
+                     event.preventDefault();
+
+                     var id = $('#day-add-pair-id').val();
+                     var count = $('#pair-count').val();
+
+                     $('.modal-window-block').css('height', '450px');
+                     if (count >= 3) {
+                        $('.modal-window-block').css('height', '550px');
+
+                        if (count >= 5) {
+                           $('.modal-window-block').css('height', '600px');
+
+                           if (count >= 6) {
+                              $('.modal-window-block').css('height', '650px');
+
+                              if (count >= 7) {
+                                 $('.modal-window-block').css('height', '700px');
+
+                                 if (count >= 7) {
+                                    $('.modal-window-block').css('height', '750px');
+                                 }
+                              }
+                           }
+                        }
+                     }
+
+                     $.post("../php/pair-day-visit.php", {
+                           id,
+                           count
+                        })
+
+                        .done(function(data) {
+                           $('#count-pair').html(data);
+                        });
+                  })
+               </script>
+            </div>
+         </div>
+      </div>
+
+      <div id="filter-table-my-group" class="add-group-teacher order order-filter-table-my-group" style="display: none;">
+         <div class="modal-window-block">
+            <div class="modal-window">
+               <div class="header-text">Фільтри</div>
+               <div class="x-filter-table-my-group x">×</div>
+            </div>
+            <div class="content" style="justify-content: unset;">
+               <form id="form-filter-table-my-group" class="form-modal" style="justify-content: unset;text-align: unset;display: block;">
+
+               </form>
+               <div id="filter-message-my-group"></div>
+               <script>
+                  $(document).ready(function() {
+                     $('body').on("change", "#form-filter-table-my-group", function(e) {
+
+                        var data = $('#form-filter-table-my-group').serialize();
+                        var pair = localStorage.getItem('pair');
+                        data += "&pair=" + pair;
+
+                        $.ajax({
+                           type: "POST",
+                           url: "../php/mark-table-kurator.php",
+                           data: data,
+
+                           success: function(data) {
+                              $('#block-table-mark-kurator').html(data);
+                           }
+                        });
+                     });
+                  })
+               </script>
+            </div>
+         </div>
+      </div>
+
+      <div id="zvit-month-propusk" class="add-group-teacher order order-zvit-month-propusk" style="display: none">
+         <div class="modal-window-block" style="height: 250px">
+            <div class="modal-window">
+               <div class="header-text"> Звіт за місяць</div>
+               <div class="x-zvit-month-propusk x">×</div>
+            </div>
+            <div class="content" style="justify-content: unset;">
+               <form id="form-zvit-month-propusk" class="form-modal" >
+                  <input type="month" id="month-zvit-progul" required>
+                  <a id="create-zvit-month" class="buttom">Генерація</a>
+               </form>
+               <script>
+                  $(window).on('load', function(event) {
+                        event.preventDefault();
+
+                        function checkDate(number) {
+                           if (number < 10) {
+                              return "0" + number;
+                           } else {
+                              return number;
+                           }
+                        }
+
+                        var date = new Date(), year = date.getFullYear(), month = checkDate(date.getMonth()+1);
+
+                        date = year + "-" + month;
+                        $('#month-zvit-progul').val(date);
+                        $('#month-zvit-progul').attr('max', date);
+                     })
+
+                  $(document).ready(function() {
+                     $('body').on("mousedown", "#create-zvit-month", function(e) {
+                        e.preventDefault();
+                        var date = $('#month-zvit-progul').val();
+                        var kurator = localStorage.getItem('id');
+                        var data = "?kurator=" + kurator + "&date=" + date;
+
+                        $('#create-zvit-month').attr('href', '../phpword/progul_month/index.php' + data);
+                     });
+                  })
+               </script>
+            </div>
+         </div>
+      </div>
+
+      <div id="zvit-vidomist" class="add-group-teacher order order-zvit-vidimist" style="display: none">
+         <div class="modal-window-block" style="height: 300px">
+            <div class="modal-window">
+               <div class="header-text"> Відомість</div>
+               <div class="x-zvit-vidimist x">×</div>
+            </div>
+            <div class="content" style="justify-content: unset;">
+               <form id="form-zvit-vidomist" class="form-modal" >
+                  <select id="zvit-select-type" requireq>
+                     <option value="a" selected>Атестація</option>
+                     <option value="s">Семестровий</option>
+                  </select>
+                  з
+                  <input type="date" id="date-zvit-start" required>
+                  до
+                  <input type="date" id="date-zvit-finish" required>
+                  <a id="create-zvit-vidomist" class="buttom">Генерація</a>
+               </form>
+               <script>
+                  $(window).on('load', function(event) {
+                        event.preventDefault();
+
+                        function checkDate(number) {
+                           if (number < 10) {
+                              return "0" + number;
+                           } else {
+                              return number;
+                           }
+                        }
+
+                        var date = new Date(), year = date.getFullYear(), month = checkDate(date.getMonth()+1), day =  checkDate(date.getDate());
+                        date = year + "-" + month + "-" + day;
+                        
+                        $('#date-zvit-start').val(date);
+                        $('#date-zvit-finish').val(date);
+                     })
+
+                  $(document).ready(function() {
+                     $('body').on("mousedown", "#create-zvit-vidomist", function(e) {
+                        e.preventDefault();
+                        var dayStart = $('#date-zvit-start').val(),
+                           dayFinish = $('#date-zvit-finish').val(),
+                           vidomist = $('#zvit-select-type').val();
+                        var kurator = localStorage.getItem('id');
+                        var data = "?kurator=" + kurator + "&dayStart=" + dayStart + "&dayFinish=" + dayFinish;
+
+                        if (vidomist == "a") {
+                           $('#create-zvit-vidomist').attr('href', '../phpword/atestacia/index.php' + data);
+                        } else if (vidomist == "s") {
+                           $('#create-zvit-vidomist').attr('href', '../phpword/vidomist/index.php' + data);
+                        }
+
+                     });
+                  })
+               </script>
+            </div>
+         </div>
+      </div>
+
+      <div id="zvit-teacher" class="add-group-teacher order order-zvit-teacher" style="display: none">
+         <div class="modal-window-block" style="height: 300px">
+            <div class="modal-window">
+               <div class="header-text">Семестровий звіт</div>
+               <div class="x-zvit-teacher x">×</div>
+            </div>
+            <div class="content" style="justify-content: unset;">
+               <form id="form-zvit-teacher" class="form-modal" >
+                  з
+                  <input type="date" id="date-teacher-start" required>
+                  до
+                  <input type="date" id="date-teacher-finish" required>
+                  <a id="create-zvit-teacher" class="buttom">Генерація</a>
+               </form>
+               <script>
+                  $(window).on('load', function(event) {
+                        event.preventDefault();
+
+                        function checkDate(number) {
+                           if (number < 10) {
+                              return "0" + number;
+                           } else {
+                              return number;
+                           }
+                        }
+
+                        var date = new Date(), year = date.getFullYear(), month = checkDate(date.getMonth()+1), day =  checkDate(date.getDate());
+                        date = year + "-" + month + "-" + day;
+                        
+                        $('#date-teacher-start').val(date);
+                        $('#date-teacher-finish').val(date);
+                     })
+
+                  $(document).ready(function() {
+                     $('body').on("mousedown", "#create-zvit-teacher", function(e) {
+                        e.preventDefault();
+                        var dayStart = $('#date-teacher-start').val(),
+                           dayFinish = $('#date-teacher-finish').val(),
+                           vidomist = $('#zvit-select-type').val();
+                        var pair = localStorage.getItem('pair');
+                        var data = "?pair=" + pair + "&dayStart=" + dayStart + "&dayFinish=" + dayFinish;
+
+                        $('#create-zvit-teacher').attr('href', '../phpword/template/index.php' + data);
+                        
+
+                     });
+                  })
+               </script>
+            </div>
+         </div>
+      </div>
+
+      <script>
+         'use strict';
+         $(document).ready(function() {
+            $('#avtorise').on('click', () => {
+               localStorage.clear();
+            });
+         })
+         const nameDelSymbol = (text) => {
+
+            text = text.split('');
+
+            for (let i = 0; i < text.length; i++) {
+               if (text[i] == "'" || text[i] == ["`"] || text[i] == '"' || text[i] == "^" || text[i] == "*" || text[i] == "~") {
+
+                  text[i] = "’";
+               }
+            }
+
+            text = text.join('');
+
+            return text;
+         };
+
+         const nameSpecialty = (text) => {
+
+            text = text.split('');
+
+            for (let i = 0; i < text.length; i++) {
+               if (text[i] == "'" || text[i] == ["`"] || text[i] == "^" || text[i] == "*" || text[i] == "~") {
+
+                  text[i] = "’";
+               }
+               if (text[i] == '"') {
+                  text[i] = "«»";
+               }
+            }
+
+            text = text.join('');
+
+            return text;
+         };
+      </script>
+      
+      <!-- header - end -->
+      <!-- main - start -->
+      <main>
+         <div class="content">
+            <div id="menu-sidebar">
+               <div>
+                  <ol>
+                     <li class="menu-item-sidebar jurnal" id="jurnal">
+                        <div>Журнал</div><img src="../images/menu-png/jurnal.png" alt="jurnal">
+                     </li>
+                     <li class="menu-item-sidebar visit" id="visit">
+                        <div>Відвідування</div><img src="../images/menu-png/visit.png" alt="visiting">
+                     </li>
+                     <li class="menu-item-sidebar my-group" id="my-group">
+                        <div>Журнал "Моя група"</div><img src="../images/menu-png/jurnal.png" alt="jurnal">
+                     </li>
+                  </ol>
+                  <div>
+
+                  </div>
+               </div>
+            </div>
+
+            <div id="active-zone">
+               <div id="jurnal-zone" class="block-active-zone">
+                  <div id="uper-zone">
+                     <div id="back-zone" style="width: 100%">
+                        <div id="back-to-subject" class="back" style="display: none;"><img src="../images/back_arrow_30px.png" alt="Назад" style="margin-right: 7%">до вибору предмету</div>
+                        <div id="back-to-group" class="back" style="display: none;"><img src="../images/back_arrow_30px.png" alt="Назад" style="margin-right: 7%">до вибору групи</div>
+                     </div>
+                     <div id="filter" style="width: 50%; display: none;">
+                        <div id="filter-zone" class="back filter-zone"> Фільтри
+                        </div>
+                        <div id="add-buttom" class="back add-buttom"> Додати пару</div>
+                     </div>
+                  </div>
+                  <div id="block-subject">
+                  </div>
+                  <script>
+                     $(window).on('load', (event) => {
+                        event.preventDefault();
+
+                        function checkDate(number) {
+                           if (number < 10) {
+                              return "0" + number;
+                           } else {
+                              return number;
+                           }
+                        }
+
+                        var dayStart, dayFinish, year, month, day;
+                        dayStart = new Date(new Date().setDate(new Date().getDate() - 7));
+                        year = dayStart.getFullYear();
+                        month = checkDate(dayStart.getMonth() + 1);
+                        day = checkDate(dayStart.getDate());
+                        dayStart = year + "-" + month + "-" + day;
+
+                        dayFinish = new Date();
+                        year = dayFinish.getFullYear();
+                        month = checkDate(dayFinish.getMonth() + 1);
+                        day = checkDate(dayFinish.getDate());
+                        dayFinish = year + "-" + month + "-" + day;
+
+                        $('#visit-filter-start').val(dayStart);
+                        $('#visit-filter-finish').val(dayFinish);
+
+                        $('#visit-filter-start').attr("max", dayFinish);
+                        $('#visit-filter-finish').attr("max", dayFinish);
+                        $('#date-visit').attr("max", dayFinish);
+                        $('.filter-zone').show();
+                        $('.add-buttom').show();
+
+                        var teacher = localStorage.getItem("id");
+                        $('#day-add-pair-id').val(teacher);
+                        var data = 'teacher=' + teacher;
+
+                        $.ajax({
+                           type: "POST",
+                           url: "../php/choose-subject-teacher.php",
+                           data: data,
+
+                           success: function(data) {
+                              $('#block-subject').html(data);
+                           },
+                           error: function() {
+                              $('#block-subject').html("ERROR");
+                           }
+                        })
+                     });
+                  </script>
+                  <div id="block-group" style="display: none;">
+                  </div>
+                  <script>
+                     $(document).ready(function() {
+                        $('body').on('click', '.group-text', function showTable(event) {
+                           event.preventDefault();
+
+                           var pair = this.id;
+                           localStorage.setItem("pair", pair);
+                           $.post("../php/filter.php", {
+                                 pair
+                              })
+
+                              .done(function(data) {
+                                 $('#form-table-filter').html(data);
+
+
+                                 var s = new Date(),
+                                    year = s.getFullYear(),
+                                    month = s.getMonth() + 1;
+
+                                 if (month < 10) {
+                                    month = "0" + month;
+                                 }
+
+                                 let today = year + "-" + month;
+
+                                 $('#filter-month').val(today);
+
+                                 $('#pair-add-pair-id').val(pair);
+
+                                 var data = $('#form-table-filter').serialize();
+                                 data += "&pair=" + pair;
+
+                                 $.ajax({
+                                    type: "POST",
+                                    url: "../php/mark-table-teacher.php",
+                                    data: data,
+
+                                    success: function(data) {
+                                       $('#block-table-mark').html(data);
+                                    }
+                                 });
+                              });
+                        })
+
+                        $('body').on('click', '.delete-mark-teacher', function showTable(event) {
+                           event.preventDefault();
+
+                           var confir = confirm("Після видалення дані повернути неможливо. Справді бажаєте видалити пару?");
+
+                           if (confir === true) {
+
+                              var mark = this.id;
+                              $.post("../php/change-avg-delete-mark-table-teacher.php", {
+                                    mark
+                                 })
+                                 .done(function(data) {
+
+                                    $.post("../php/delete-mark-table-teacher.php", {
+                                          mark
+                                       })
+                                       .done(function(data) {
+
+                                          var pair = localStorage.getItem("pair");
+                                          var data = $('#form-table-filter').serialize();
+                                          data += "&pair=" + pair;
+
+                                          $.ajax({
+                                             type: "POST",
+                                             url: "../php/mark-table-teacher.php",
+                                             data: data,
+                                             success: function(data) {
+
+                                                $('#block-table-mark').html(data);
+                                             }
+                                          })
+                                       });
+                                 });
+                           }
+                        })
+                        /* 
+                         * - 
+                         * - modal window - start
+                         * - 
+                         */
+                        $('body').on('click', ".add-buttom", event => {
+                           event.preventDefault();
+
+                           $("#add-pair-teacher").css('display', 'flex');
+                           $('#top-menu').css('max-height', '0px');
+                           $('#top-menu').css('font-size', '0px');
+                        });
+                        $('body').on('click', ".filter-zone", event => {
+                           event.preventDefault();
+                           $("#filter-table-teacher").css('display', 'flex');
+                           $('#top-menu').css('max-height', '0px');
+                           $('#top-menu').css('font-size', '0px');
+                        });
+
+                        $('body').on('click', ".filter-zone-my-group", event => {
+                           event.preventDefault();
+                           $("#filter-table-my-group").css('display', 'flex');
+                           $('#top-menu').css('max-height', '0px');
+                           $('#top-menu').css('font-size', '0px');
+                        });
+
+                     })
+                     /* 
+                      * - 
+                      * - modal window - end
+                      * - 
+                      */
+                  </script>
+                  <div id="block-table-teacher" style="display: none;">
+                     <div id="block-table-mark"></div>
+                     <div class="zvit-block" >
+                        <input type="button" value="Створити звіт" id="open-modal-teacher" class="buttom">
+                        <script>
+                           $(document).ready(function() {
+                              $('body').on('click', '#open-modal-teacher', function(event) {
+                                 event.preventDefault();
+
+                                 $('#zvit-teacher').css('display', 'block');
+                              })
+                           })
+                        </script>
+                     </div>
+                  </div>
+                  
+                  <div id="add-pair-teacher-message"></div>
+               </div>
+
+               <div id="visit-zone" class="block-active-zone" style="display: none">
+                  <div id="uper-zone-visit" style="margin-bottom: 5px;">
+                     <div id="filter-visit" id="filter" style="width: 100%;">
+                        <div id="filter-zone-visit" class="back filter-zone-visit"> Фільтри</div>
+                        <div id="add-buttom-visit" class="back add-buttom-visit" style="margin-left: 5px"> Додати день</div>
+                     </div>
+                  </div>
+                  <div id="block-table-kurator">
+                     <div id="block-table-visit"></div>
+                  </div>
+                  <div class="zvit-block" >
+                     <input type="button" value="Створити звіт" id="open-modal-month-zvit" class="buttom">
+                     <script>
+                        $(document).ready(function() {
+                           $('body').on('click', '#open-modal-month-zvit', function(event) {
+                              event.preventDefault();
+
+                              $('#zvit-month-propusk').css('display', 'block');
+                           })
+                        })
+                     </script>
+                  </div>
+                  <script>
+                     $(window).on('load', function(event) {
+                        event.preventDefault();
+
+                        var dayStart, dayFinish, year, month, day;
+
+                        var data = localStorage.getItem('id');
+                        data = "id=" + data;
+                        dayStart = $('#visit-filter-start').val();
+                        dayFinish = $('#visit-filter-finish').val();
+
+                        data += "&dayStart=" + dayStart + "&dayFinish=" + dayFinish;
+
+                        $.ajax({
+                           type: "POST",
+                           url: "../php/visit-table-kurator.php",
+                           data: data,
+                           success: function(data) {
+                              $('#block-table-visit').html(data);
+                           }
+                        });
+                     })
+
+                     $('body').on('click', ".add-buttom-visit", event => {
+                        event.preventDefault();
+                        $("#add-day-kurator").css('display', 'flex');
+                        $('#top-menu').css('max-height', '0px');
+                        $('#top-menu').css('font-size', '0px');
+                     });
+
+                     $('body').on('click', ".filter-zone-visit", event => {
+                        event.preventDefault();
+                        $("#filter-table-visit").css('display', 'flex');
+                        $('#top-menu').css('max-height', '0px');
+                        $('#top-menu').css('font-size', '0px');
+                     });
+                  </script>
+               </div>
+
+               <div id="jurnal-my-group-zone" class="block-active-zone" style="display: none">
+                  <div id="uper-zone-kurator">
+                     <div id="back-zone-kurator">
+                        <div id="back-to-subject-kurator" class="back" style="display: none;"><img src="../images/back_arrow_30px.png" alt="Назад" style="margin-right: 7%">до вибору предмету</div>
+                     </div>
+                     <div id="filter-kurator" style="width: 50%; display: none;">
+                        <div id="filter-zone-kurator" class="back filter-zone-my-group"> Фільтри</div>
+                     </div>
+                  </div>
+                  <div id="block-subject-kurator"></div>
+                  <script>
+                     $(window).on('load', (event) => {
+                        event.preventDefault();
+
+
+                        $('.filter-zone').show();
+                        $('.add-buttom').show();
+
+                        var teacher = localStorage.getItem("id");
+                        var data = 'teacher=' + teacher;
+
+                        $.ajax({
+                           type: "POST",
+                           url: "../php/choose-subject-kurator.php",
+                           data: data,
+
+                           success: function(data) {
+                              $('#block-subject-kurator').html(data);
+                           },
+                           error: function(data) {
+                              $('#block-subject-kurator').html("ERROR");
+                           }
+                        })
+                     });
+                  </script>
+
+                  <script>
+                     $(document).ready(function() {
+                        $('body').on('click', '.group-text', function showTable(event) {
+                           event.preventDefault();
+
+                           var pair = this.id;
+                           localStorage.setItem("pair", pair);
+                           $.post("../php/filter.php", {
+                                 pair
+                              })
+
+                              .done(function(data) {
+                                 $('#form-table-filter').html(data);
+
+
+                                 var s = new Date(),
+                                    year = s.getFullYear(),
+                                    month = s.getMonth() + 1;
+
+                                 if (month < 10) {
+                                    month = "0" + month;
+                                 }
+
+                                 let today = year + "-" + month;
+
+                                 $('#filter-month').val(today);
+
+                                 $('#pair-add-pair-id').val(pair);
+
+                                 var data = $('#form-table-filter').serialize();
+                                 data += "&pair=" + pair;
+
+                                 $.ajax({
+                                    type: "POST",
+                                    url: "../php/mark-table-teacher.php",
+                                    data: data,
+
+                                    success: function(data) {
+                                       $('#block-table-mark').html(data);
+                                    }
+                                 });
+                              });
+                        })
+
+                        $('body').on('click', '.delete-mark-teacher', function showTable(event) {
+                           event.preventDefault();
+
+                           var confir = confirm("Після видалення дані повернути неможливо. Справді бажаєте видалити пару?");
+
+                           if (confir === true) {
+
+                              var mark = this.id;
+                              $.post("../php/change-avg-delete-mark-table-teacher.php", {
+                                    mark
+                                 })
+                                 .done(function(data) {
+
+                                    $.post("../php/delete-mark-table-teacher.php", {
+                                          mark
+                                       })
+                                       .done(function(data) {
+
+                                          var pair = localStorage.getItem("pair");
+                                          var data = $('#form-table-filter').serialize();
+                                          data += "&pair=" + pair;
+
+                                          $.ajax({
+                                             type: "POST",
+                                             url: "../php/mark-table-teacher.php",
+                                             data: data,
+                                             success: function(data) {
+
+                                                $('#block-table-mark').html(data);
+                                             }
+                                          })
+                                       });
+                                 });
+                           }
+                        })
+                        /* 
+                         * - 
+                         * - modal window - start
+                         * - 
+                         */
+                        $('body').on('click', ".add-buttom", event => {
+                           event.preventDefault();
+
+                           $("#add-pair-teacher").css('display', 'flex');
+                           $('#top-menu').css('max-height', '0px');
+                           $('#top-menu').css('font-size', '0px');
+                        });
+                        $('body').on('click', ".filter-zone", event => {
+                           event.preventDefault();
+                           $("#filter-table-teacher").css('display', 'flex');
+                           $('#top-menu').css('max-height', '0px');
+                           $('#top-menu').css('font-size', '0px');
+                        });
+
+                        $('body').on('click', ".filter-zone-my-group", event => {
+                           event.preventDefault();
+                           $("#filter-table-my-group").css('display', 'flex');
+                           $('#top-menu').css('max-height', '0px');
+                           $('#top-menu').css('font-size', '0px');
+                        });
+
+                     })
+                     /* 
+                      * - 
+                      * - modal window - end
+                      * - 
+                      */
+                  </script>
+                  <div id="block-table-my-group" style="display: none;">
+                     <div id="block-table-mark-kurator"></div>
+                     
+                  </div>
+                  <div class="zvit-block" >
+                     <input type="button" value="Створити відомість" id="open-modal-vidomist" class="buttom">
+                     <script>
+                        $(document).ready(function() {
+                           $('body').on('click', '#open-modal-vidomist', function(event) {
+                              event.preventDefault();
+
+                              $('#zvit-vidomist').css('display', 'block');
+                           })
+                        })
+                     </script>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </main>
+      <!-- main - end -->
+      <!-- footer - start -->
+      <!--<footer>
+         <div class="footerear">
+            <div class="ather">&copy; RaiDInc</div>
+            <div class="year">2020</div>
+         </div>
+      </footer>-->
+   </div>
+   <!-- footer - end -->
+
+   <script>
+      $(document).ready(function() {
+         $('body').on('click', '.jurnal', event, function() {
+            event.preventDefault();
+
+            $('#block-subject').css("display", "flex");
+            $('#block-group').hide();
+            $('#block-table-teacher').hide();
+            $('#back-to-subject').hide();
+            $('#back-to-group').hide();
+            $('#filter').hide();
+            $('.f').hide();
+            $('.filter-zone').show();
+            $('.add-buttom').show();
+         })
+         $('body').on('click', '.visit', event, function() {
+            event.preventDefault();
+
+            $('.f').hide();
+            $('.filter-zone-visit').show();
+            $('.add-buttom-day').show();
+            $('.add-buttom-visit').show();
+            if ($(window).width() <= 992) {
+               $('#uper-zone-visit').hide();
+            }
+         })
+         $('body').on('click', '.my-group', event, function() {
+            event.preventDefault();
+
+            $('.f').hide();
+            $('.filter-zone-my-group').show();
+            $('#block-subject-kurator').show();
+            $('#back-to-subject-kurator').hide();
+            $('#filter-kurator').hide();
+            $('#block-table-my-group').hide();
+            if ($(window).width() <= 992) {
+               $('#uper-zone-my-group').hide();
+            }
+         })
+
+
+
+         $('body').on('change', '.mark-change', event, function() {
+            event.preventDefault();
+
+            var data = $(this).serialize();
+            $.ajax({
+               type: "POST",
+               url: "../php/change-mark-table-teacher.php",
+               data: data,
+               success: function(data) {
+                  $('#add-pair-teacher-message').html(data);
+               },
+               error: function() {
+                  alert('error handing here');
+               }
+            });
+         })
+
+         $('body').on('submit', '.mark-change', function(event) {
+            event.preventDefault();
+
+            var data = $(this).serialize();
+            $.ajax({
+               type: "POST",
+               url: "../php/change-mark-table-teacher.php",
+               data: data,
+               success: function(data) {
+                  $('#add-pair-teacher-message').html(data);
+               },
+               error: function() {
+                  alert('error handing here');
+               }
+            });
+         })
+
+         $('body').on('change', '.visit-change', event, function() {
+            event.preventDefault();
+
+            var data = $(this).serialize();
+
+            $.ajax({
+               type: "POST",
+               url: "../php/change-visit-table-teacher.php",
+               data: data,
+               success: function(data) {
+                  $('#filter-message-visit').html(data);
+               },
+               error: function() {
+                  alert('error handing here');
+               }
+            });
+         })
+
+         $('body').on('submit', '.visit-change', function(event) {
+            event.preventDefault();
+
+            var data = $(this).serialize();
+
+            $.ajax({
+               type: "POST",
+               url: "../php/change-visit-table-teacher.php",
+               data: data,
+               success: function(data) {
+                  $('#filter-message-visit').html(data);
+               },
+               error: function() {
+                  alert('error handing here');
+               }
+            });
+         })
+
+
+         $('body').on('click', '.block-add', function() {
+            $('#add-group-teacher').show();
+         });
+
+         $('body').on('click', '.menu-delete', function() {
+            var pair = this.id;
+
+            var confir = confirm("Після видалення зникне вся інформація зв'язана з цією групою! Справді бажаєте видалити групу?");
+
+            if (confir === true) {
+               $.post("../php/delete-group-teacher.php", {
+                     pair
+                  })
+
+                  .done(function(data) {
+                     setTimeout(function() {
+                        window.location.reload();
+                     }, 1000);
+                  });
+            }
+         });
+
+
+         $('body').on('click', '.group-text', function(event) {
+            var target = event.target;
+            var modal = target.closest('.menu-group');
+
+            if (target !== modal) {
+
+               $('#block-group').hide();
+               $('#block-subject').hide();
+               $('#back-to-subject').show();
+               $('#back-to-group').show();
+               $('#block-table-teacher').show();
+               if ($(window).width() > 992) {
+                  $('#back-zone').css('width', '50%');
+                  $('#filter').show();
+               }
+            }
+         })
+
+         $('body').on('click', '.back', function() {
+           
+            $('#pair-add-pair-id').val('');
+         });
+      })
+   </script>
+   <script src="../script/preloader.js"></script>
+   <script src="../script/script-teacher.js"></script>
+   <script src="../script/script-kurator.js"></script>
+   <script src="../script/zvit.js"></script>
+
+   <script>
+      $('body').keydown(function(event) {
+         if (event.keyCode === 27) {
+            $('.order').css('display','none')
+         }
+      })
+   </script>
+</body>
+
+</html>

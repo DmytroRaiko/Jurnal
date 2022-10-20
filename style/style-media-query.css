@@ -1,0 +1,182 @@
+@media only screen and (max-width: 992px) {
+   
+   #second .logo img, #first .logo img {
+      width: 75px;
+      height: 75px;
+   }
+   
+   #second .login img, #first .login img {
+      height: 50px;
+      width: 50px;
+   }
+   
+   #second .name, #first .name {
+      font-size: 25px;
+   }
+
+   main .content .form-circle {
+      width: 80%;  
+   }
+
+   main .content .form-circle .form-login #login, #password, label, #password-r {
+      -webkit-border-radius: 5px;
+      border-radius: 5px;
+      font-size: 20px;
+      margin: 8px;
+   }
+
+   main .content .form-circle .form-login #login, #password, #password-r {
+      height: 32px;
+      padding: 3px;
+   }
+
+   main .content .form-circle .form-login #log-in {
+      font-size: 23px;
+      margin-top: 30px;
+      height: 20%;
+      width: 60%;
+      -webkit-border-radius: 11px;
+      border-radius: 11px;
+   }
+
+   footer {
+   padding-top: 3px;
+   padding-bottom: 3px;
+   }
+   
+   .footerear .ather, .year {
+      font-size: 12px;
+   }
+}
+
+@media only screen and (max-width: 768px) {
+
+
+   #second .logo img, #first .logo img {
+      width: 65px;
+      height: 65px;
+   }
+   
+   #second .login img, #first .login img {
+      height: 50px;
+      width: 50px;
+   }
+   
+   #second, #first {
+      height: 90px;
+   }
+
+   main {
+      padding-top: 98px;
+   }
+
+   #second .name, #first .name {
+      font-size: 24px;
+   }
+
+   main .content .form-circle {
+      width: 80%;  
+      height: 90%;
+   }
+
+   main .content .form-circle .form-login #login, #password, label, #password-r {
+      -webkit-border-radius: 5px;
+      border-radius: 5px;
+      font-size: 20px;
+      margin: 8px;
+   }
+
+   main .content .form-circle .form-login #login, #password, #password-r {
+      height: 32px;
+      border: 1px solid;
+      font-weight: normal; 
+      border-color: rgb(31, 81, 189);
+      padding: 3px;
+   }
+
+   main .content .form-circle .form-login #log-in {
+      font-size: 23px;
+      margin-top: 30px;
+      height: 20%;
+      
+      -webkit-border-radius: 11px;
+      border-radius: 11px;
+   }
+
+   footer {
+      padding-top: 3px;
+      padding-bottom: 3px;
+   }
+   
+   footer .ather, .year {
+      font-size: 12px;
+   }
+}
+
+@media only screen and (max-width: 508px) {
+   
+   #second .logo img, #first .logo img {
+      width: 60px;
+      height: 60px;
+   }
+   
+   #second .login img, #first .login img {
+      height: 45px;
+      width: 45px;
+   }
+   
+   #second .name, #first .name {
+      font-size: 22px;
+   }
+
+   #second, #first {
+      height: 80px;
+   }
+
+   main {
+      padding-top: 88px;
+   }
+
+   main .content .form-circle {
+      width: 80%;  
+      height: 90%;
+      border-radius: 40%;
+   }
+
+   main .content .form-circle .form-login #login, #password, #password-r, label {
+      -webkit-border-radius: 5px;
+      border-radius: 5px;
+      font-size: 20px;
+      margin: 8px;
+   }
+
+   label {
+      margin: 0px;
+   }
+
+   main .content .form-circle .form-login #login, #password, #password-r {
+      height: 28px;
+      border: 1px solid;
+      font-weight: normal; 
+      border-color: rgb(31, 81, 189);
+      padding: 3px;
+   }
+
+   main .content .form-circle .form-login #log-in {
+      font-size: 20px;
+      margin-top: 30px;
+      height: 20%;
+      width: 80%;
+      -webkit-border-radius: 11px;
+      border-radius: 11px;
+   }
+
+   footer {
+      padding-top: 3px;
+      padding-bottom: 3px;
+   }
+   
+   footer .ather, .year {
+      font-size: 12px;
+   }
+}
